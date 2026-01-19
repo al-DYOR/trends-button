@@ -1,5 +1,5 @@
 // Комментарий: Главная страница с пузырьками + 4 кнопками для трендов (деген названия)
-// Пузырьки позади кнопок (z-index), не мешают кликам
+// CSS анимации перенесены в globals.css
 
 'use client';
 
@@ -40,17 +40,11 @@ export default function Home() {
     <main className="relative min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-gray-900 via-purple-900/20 to-black text-white overflow-hidden">
       {/* Комментарий: Пузырьки - фон, z-index: 0, НЕ ловят клики */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Большой пузырь слева */}
         <div className="absolute w-64 h-64 bg-purple-500/20 rounded-full blur-xl animate-bubble1" />
-        {/* Пузырь справа сверху */}
         <div className="absolute w-48 h-48 bg-blue-500/20 rounded-full blur-xl animate-bubble2 right-20 top-20" />
-        {/* Пузырь снизу */}
         <div className="absolute w-72 h-72 bg-indigo-500/20 rounded-full blur-xl animate-bubble3 bottom-10 left-1/4" />
-        {/* Маленький пузырь */}
         <div className="absolute w-32 h-32 bg-pink-500/20 rounded-full blur-lg animate-bubble4 top-1/2 right-10" />
-        {/* Пузырь с поворотом */}
         <div className="absolute w-56 h-56 bg-green-500/20 rounded-full blur-xl animate-bubble5 left-10 bottom-40 rotate-12" />
-        {/* Центр - самый медленный */}
         <div className="absolute w-96 h-96 bg-gradient-to-r from-purple-400/10 via-blue-400/10 to-indigo-400/10 rounded-full blur-3xl animate-bubble6" />
       </div>
 
@@ -154,43 +148,5 @@ export default function Home() {
         )}
       </div>
     </main>
-
-    {/* Комментарий: CSS анимации для пузырьков - добавляем в конец */}
-    <style jsx>{`
-      @keyframes bubble1 {
-        0%, 100% { transform: translateY(0px) translateX(0px); }
-        33% { transform: translateY(-30px) translateX(20px); }
-        66% { transform: translateY(-10px) translateX(-15px); }
-      }
-      @keyframes bubble2 {
-        0%, 100% { transform: translateY(0px) translateX(0px); }
-        50% { transform: translateY(-20px) translateX(10px); }
-        100% { transform: translateY(0px) translateX(-5px); }
-      }
-      @keyframes bubble3 {
-        0%, 100% { transform: translateY(0px) scale(1); }
-        50% { transform: translateY(-25px) scale(1.05); }
-      }
-      @keyframes bubble4 {
-        0%, 100% { transform: translateX(0px) translateY(0px) scale(0.8); }
-        33% { transform: translateX(15px) translateY(-10px) scale(1); }
-        66% { transform: translateX(-10px) translateY(5px) scale(0.9); }
-      }
-      @keyframes bubble5 {
-        0%, 100% { transform: translateY(0px) translateX(0px) rotate(12deg); }
-        50% { transform: translateY(-15px) translateX(10px) rotate(15deg); }
-      }
-      @keyframes bubble6 {
-        0%, 100% { transform: scale(1) translateY(0px); }
-        50% { transform: scale(1.1) translateY(-10px); }
-      }
-      
-      .animate-bubble1 { animation: bubble1 20s ease-in-out infinite; }
-      .animate-bubble2 { animation: bubble2 25s ease-in-out infinite reverse; }
-      .animate-bubble3 { animation: bubble3 30s ease-in-out infinite; }
-      .animate-bubble4 { animation: bubble4 18s ease-in-out infinite reverse; }
-      .animate-bubble5 { animation: bubble5 22s ease-in-out infinite; }
-      .animate-bubble6 { animation: bubble6 35s ease-in-out infinite reverse; }
-    `}</style>
   );
 }
