@@ -3,112 +3,222 @@
 import { useState } from 'react';
 
 export default function Home() {
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchTrend = async (endpoint: string) => {
+  const fetchTrend = async (endpoint) => {
     setLoading(true);
-    setError(null);
-    setResult(null);
+    setResult('');
 
     try {
       const response = await fetch(`/api/${endpoint}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
       const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setResult(data.message || data.topTrend || data.topToken || 'No data received');
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Failed to load trend. Try again later.');
+      setResult(data.topTrend || data.topToken || 'Data loaded!');
+    } catch (err) {
+      setResult('Error loading data');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-900 text-white">
-      <h1 className="text-5xl md:text-6xl font-bold mb-8 text-center bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent drop-shadow-lg">
+    <div style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      padding: '2rem',
+      background: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #1e1b4b 100%)',
+      color: 'white',
+      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'
+    }}>
+      <h1 style={{ 
+        fontSize: '3.5rem', 
+        fontWeight: 'bold', 
+        marginBottom: '2rem',
+        background: 'linear-gradient(45deg, #9333ea, #ec4899, #3b82f6)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        textAlign: 'center'
+      }}>
         Crypto Trends Today
       </h1>
-      <p className="text-xl md:text-2xl mb-12 text-center max-w-2xl text-gray-300">
+      
+      <p style={{ 
+        fontSize: '1.5rem', 
+        marginBottom: '3rem', 
+        textAlign: 'center',
+        maxWidth: '600px',
+        opacity: 0.9
+      }}>
         Discover daily crypto trends from Twitter and Farcaster
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-        <button
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+        gap: '1.5rem', 
+        maxWidth: '900px',
+        width: '100%'
+      }}>
+        <button 
           onClick={() => fetchTrend('trend-crypto')}
           disabled={loading}
-          className={`p-6 rounded-xl text-left transition-all shadow-lg border-2 ${
-            loading
-              ? 'bg-gray-700 border-gray-600 cursor-not-allowed'
-              : 'bg-purple-600 hover:bg-purple-500 border-purple-400'
-          }`}
+          style={{
+            padding: '2rem',
+            borderRadius: '16px',
+            border: '2px solid #9333ea',
+            background: loading ? '#4b5563' : '#9333ea',
+            color: 'white',
+            fontSize: '1.3rem',
+            fontWeight: '600',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            boxShadow: '0 20px 40px rgba(147, 51, 234, 0.4)',
+            transition: 'all 0.3s ease',
+            textAlign: 'left'
+          }}
+          onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-4px)')}
+          onMouseLeave={(e) => !loading && (e.target.style.transform = '')}
         >
-          <h2 className="text-2xl font-semibold mb-2">🟠 What's popping on CT?</h2>
-          <p className="text-gray-300">Top narrative 24h</p>
+          <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
+            🟠 What's popping on CT?
+          </h2>
+          <p style={{ margin: 0, opacity: 0.9 }}>Top narrative 24h</p>
         </button>
 
-        <button
+        <button 
           onClick={() => fetchTrend('trend-farcaster')}
           disabled={loading}
-          className={`p-6 rounded-xl text-left transition-all shadow-lg border-2 ${
-            loading
-              ? 'bg-gray-700 border-gray-600 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-500 border-blue-400'
-          }`}
+          style={{
+            padding: '2rem',
+            borderRadius: '16px',
+            border: '2px solid #3b82f6',
+            background: loading ? '#4b5563' : '#3b82f6',
+            color: 'white',
+            fontSize: '1.3rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            boxShadow: '0 20px 40px rgba(59, 130, 246, 0.4)',
+            transition: 'all 0.3s ease',
+            textAlign: 'left'
+          }}
+          onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-4px)')}
+          onMouseLeave={(e) => !loading && (e.target.style.transform = '')}
         >
-          <h2 className="text-2xl font-semibold mb-2">🟦 Farcaster/Base alpha</h2>
-          <p className="text-gray-300">What's hot on Base 24h</p>
+          <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
+            🟦 Farcaster/Base alpha
+          </h2>
+          <p style={{ margin: 0, opacity: 0.9 }}>What's hot on Base 24h</p>
         </button>
 
-        <button
+        <button 
           onClick={() => fetchTrend('token-solana')}
           disabled={loading}
-          className={`p-6 rounded-xl text-left transition-all shadow-lg border-2 ${
-            loading
-              ? 'bg-gray-700 border-gray-600 cursor-not-allowed'
-              : 'bg-green-600 hover:bg-green-500 border-green-400'
-          }`}
+          style={{
+            padding: '2rem',
+            borderRadius: '16px',
+            border: '2px solid #10b981',
+            background: loading ? '#4b5563' : '#10b981',
+            color: 'white',
+            fontSize: '1.3rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            boxShadow: '0 20px 40px rgba(16, 185, 129, 0.4)',
+            transition: 'all 0.3s ease',
+            textAlign: 'left'
+          }}
+          onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-4px)')}
+          onMouseLeave={(e) => !loading && (e.target.style.transform = '')}
         >
-          <h2 className="text-2xl font-semibold mb-2">🟩 Solana degen play</h2>
-          <p className="text-gray-300">2h mentions leader</p>
+          <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
+            🟩 Solana degen play
+          </h2>
+          <p style={{ margin: 0, opacity: 0.9 }}>2h mentions leader</p>
         </button>
 
-        <button
+        <button 
           onClick={() => fetchTrend('token-base')}
           disabled={loading}
-          className={`p-6 rounded-xl text-left transition-all shadow-lg border-2 ${
-            loading
-              ? 'bg-gray-700 border-gray-600 cursor-not-allowed'
-              : 'bg-indigo-600 hover:bg-indigo-500 border-indigo-400'
-          }`}
+          style={{
+            padding: '2rem',
+            borderRadius: '16px',
+            border: '2px solid #6366f1',
+            background: loading ? '#4b5563' : '#6366f1',
+            color: 'white',
+            fontSize: '1.3rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            boxShadow: '0 20px 40px rgba(99, 102, 241, 0.4)',
+            transition: 'all 0.3s ease',
+            textAlign: 'left'
+          }}
+          onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-4px)')}
+          onMouseLeave={(e) => !loading && (e.target.style.transform = '')}
         >
-          <h2 className="text-2xl font-semibold mb-2">🟣 Base/ETH moonshot</h2>
-          <p className="text-gray-300">Fresh 2h pump</p>
+          <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
+            🟣 Base/ETH moonshot
+          </h2>
+          <p style={{ margin: 0, opacity: 0.9 }}>Fresh 2h pump</p>
         </button>
       </div>
 
       {loading && (
-        <p className="mt-12 text-xl text-purple-400 animate-pulse">Loading alpha...</p>
-      )}
-
-      {error && (
-        <p className="mt-12 text-xl text-red-400">{error}</p>
+        <div style={{
+          marginTop: '3rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            border: '3px solid rgba(147, 51, 234, 0.3)',
+            borderTop: '3px solid #9333ea',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{ fontSize: '1.5rem', color: '#9333ea' }}>Loading alpha...</p>
+        </div>
       )}
 
       {result && (
-        <div className="mt-12 w-full max-w-2xl bg-gray-800 rounded-2xl p-8 shadow-2xl border border-purple-500/30">
-          <h3 className="text-3xl font-bold mb-4 text-center text-purple-400">🔥 Hottest Right Now</h3>
-          <p className="text-2xl text-center break-words">{result}</p>
+        <div style={{
+          marginTop: '3rem',
+          padding: '2.5rem',
+          background: 'rgba(31, 41, 55, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '24px',
+          border: '1px solid rgba(147, 51, 234, 0.3)',
+          maxWidth: '600px',
+          textAlign: 'center',
+          boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
+        }}>
+          <h3 style={{ 
+            fontSize: '2.5rem', 
+            marginBottom: '1.5rem', 
+            background: 'linear-gradient(45deg, #9333ea, #ec4899)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            🔥 Hottest Right Now
+          </h3>
+          <p style={{ 
+            fontSize: '1.8rem', 
+            lineHeight: 1.5,
+            color: 'white'
+          }}>
+            {result}
+          </p>
         </div>
       )}
-    </main>
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
   );
 }
