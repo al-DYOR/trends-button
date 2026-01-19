@@ -34,8 +34,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-gray-900 via-purple-900/20 to-black text-white">
-      
-      {/* ОСНОВНОЙ КОНТЕНТ - НИКАКИХ пузырей */}
       <div className="flex flex-col items-center w-full max-w-6xl">
         <h1 className="text-5xl md:text-6xl font-bold mb-8 text-center bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent drop-shadow-lg">
           Crypto Trends Today
@@ -45,7 +43,6 @@ export default function Home() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-          {/* КНОПКА 1 */}
           <button
             onClick={() => fetchTrend('trend-crypto')}
             disabled={loading}
@@ -59,7 +56,6 @@ export default function Home() {
             <p className="text-lg text-gray-200">Top narrative 24h</p>
           </button>
 
-          {/* КНОПКА 2 */}
           <button
             onClick={() => fetchTrend('trend-farcaster')}
             disabled={loading}
@@ -73,7 +69,6 @@ export default function Home() {
             <p className="text-lg text-gray-200">What's hot on Base 24h</p>
           </button>
 
-          {/* КНОПКА 3 */}
           <button
             onClick={() => fetchTrend('token-solana')}
             disabled={loading}
@@ -87,7 +82,6 @@ export default function Home() {
             <p className="text-lg text-gray-200">2h mentions leader</p>
           </button>
 
-          {/* КНОПКА 4 */}
           <button
             onClick={() => fetchTrend('token-base')}
             disabled={loading}
@@ -126,4 +120,6 @@ export default function Home() {
           </div>
         )}
       </div>
-    </m
+    </main>
+  );
+}
