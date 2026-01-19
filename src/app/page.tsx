@@ -33,93 +33,82 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-gray-900 via-purple-900/20 to-black text-white">
-      <div className="flex flex-col items-center w-full max-w-6xl">
-        <h1 className="text-5xl md:text-6xl font-bold mb-8 text-center bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent drop-shadow-lg">
-          Crypto Trends Today
-        </h1>
-        <p className="text-xl md:text-2xl mb-12 text-center max-w-2xl text-gray-300">
-          Discover daily crypto trends from Twitter and Farcaster
-        </p>
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-900 text-white">
+      <h1 className="text-5xl md:text-6xl font-bold mb-8 text-center bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent drop-shadow-lg">
+        Crypto Trends Today
+      </h1>
+      <p className="text-xl md:text-2xl mb-12 text-center max-w-2xl text-gray-300">
+        Discover daily crypto trends from Twitter and Farcaster
+      </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-          <button
-            onClick={() => fetchTrend('trend-crypto')}
-            disabled={loading}
-            className={`p-8 rounded-2xl text-left transition-all duration-300 shadow-2xl hover:shadow-purple-500/25 hover:-translate-y-2 border-2 text-white font-semibold ${
-              loading
-                ? 'bg-gray-700 cursor-not-allowed'
-                : 'bg-gradient-to-r from-purple-600 to-purple-800 border-purple-400 hover:from-purple-500 hover:to-purple-700'
-            }`}
-          >
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">🟠 What's popping on CT?</h2>
-            <p className="text-lg text-gray-200">Top narrative 24h</p>
-          </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+        <button
+          onClick={() => fetchTrend('trend-crypto')}
+          disabled={loading}
+          className={`p-6 rounded-xl text-left transition-all shadow-lg border-2 ${
+            loading
+              ? 'bg-gray-700 border-gray-600 cursor-not-allowed'
+              : 'bg-purple-600 hover:bg-purple-500 border-purple-400'
+          }`}
+        >
+          <h2 className="text-2xl font-semibold mb-2">🟠 What's popping on CT?</h2>
+          <p className="text-gray-300">Top narrative 24h</p>
+        </button>
 
-          <button
-            onClick={() => fetchTrend('trend-farcaster')}
-            disabled={loading}
-            className={`p-8 rounded-2xl text-left transition-all duration-300 shadow-2xl hover:shadow-blue-500/25 hover:-translate-y-2 border-2 text-white font-semibold ${
-              loading
-                ? 'bg-gray-700 cursor-not-allowed'
-                : 'bg-gradient-to-r from-blue-600 to-blue-800 border-blue-400 hover:from-blue-500 hover:to-blue-700'
-            }`}
-          >
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">🟦 Farcaster/Base alpha</h2>
-            <p className="text-lg text-gray-200">What's hot on Base 24h</p>
-          </button>
+        <button
+          onClick={() => fetchTrend('trend-farcaster')}
+          disabled={loading}
+          className={`p-6 rounded-xl text-left transition-all shadow-lg border-2 ${
+            loading
+              ? 'bg-gray-700 border-gray-600 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-500 border-blue-400'
+          }`}
+        >
+          <h2 className="text-2xl font-semibold mb-2">🟦 Farcaster/Base alpha</h2>
+          <p className="text-gray-300">What's hot on Base 24h</p>
+        </button>
 
-          <button
-            onClick={() => fetchTrend('token-solana')}
-            disabled={loading}
-            className={`p-8 rounded-2xl text-left transition-all duration-300 shadow-2xl hover:shadow-green-500/25 hover:-translate-y-2 border-2 text-white font-semibold ${
-              loading
-                ? 'bg-gray-700 cursor-not-allowed'
-                : 'bg-gradient-to-r from-green-600 to-emerald-800 border-green-400 hover:from-green-500 hover:to-emerald-700'
-            }`}
-          >
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">🟩 Solana degen play</h2>
-            <p className="text-lg text-gray-200">2h mentions leader</p>
-          </button>
+        <button
+          onClick={() => fetchTrend('token-solana')}
+          disabled={loading}
+          className={`p-6 rounded-xl text-left transition-all shadow-lg border-2 ${
+            loading
+              ? 'bg-gray-700 border-gray-600 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-500 border-green-400'
+          }`}
+        >
+          <h2 className="text-2xl font-semibold mb-2">🟩 Solana degen play</h2>
+          <p className="text-gray-300">2h mentions leader</p>
+        </button>
 
-          <button
-            onClick={() => fetchTrend('token-base')}
-            disabled={loading}
-            className={`p-8 rounded-2xl text-left transition-all duration-300 shadow-2xl hover:shadow-indigo-500/25 hover:-translate-y-2 border-2 text-white font-semibold ${
-              loading
-                ? 'bg-gray-700 cursor-not-allowed'
-                : 'bg-gradient-to-r from-indigo-600 to-purple-800 border-indigo-400 hover:from-indigo-500 hover:to-purple-700'
-            }`}
-          >
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">🟣 Base/ETH moonshot</h2>
-            <p className="text-lg text-gray-200">Fresh 2h pump</p>
-          </button>
-        </div>
-
-        {loading && (
-          <div className="mt-16 flex items-center space-x-4">
-            <div className="w-8 h-8 border-4 border-purple-400 border-t-white rounded-full animate-spin" />
-            <p className="text-2xl text-purple-400 font-semibold">Loading alpha...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="mt-16 p-8 bg-red-900/80 border-2 border-red-500 rounded-2xl">
-            <p className="text-2xl text-red-200 font-semibold">{error}</p>
-          </div>
-        )}
-
-        {result && (
-          <div className="mt-16 w-full max-w-3xl bg-gray-900/90 backdrop-blur-sm rounded-3xl p-10 shadow-2xl border-2 border-purple-500/50">
-            <h3 className="text-4xl font-black mb-6 text-center bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-              🔥 Hottest Right Now
-            </h3>
-            <div className="text-2xl md:text-3xl text-center p-8 rounded-2xl bg-gradient-to-r from-gray-800 to-black border border-gray-600 font-semibold">
-              {result}
-            </div>
-          </div>
-        )}
+        <button
+          onClick={() => fetchTrend('token-base')}
+          disabled={loading}
+          className={`p-6 rounded-xl text-left transition-all shadow-lg border-2 ${
+            loading
+              ? 'bg-gray-700 border-gray-600 cursor-not-allowed'
+              : 'bg-indigo-600 hover:bg-indigo-500 border-indigo-400'
+          }`}
+        >
+          <h2 className="text-2xl font-semibold mb-2">🟣 Base/ETH moonshot</h2>
+          <p className="text-gray-300">Fresh 2h pump</p>
+        </button>
       </div>
+
+      {loading && (
+        <p className="mt-12 text-xl text-purple-400 animate-pulse">Loading alpha...</p>
+      )}
+
+      {error && (
+        <p className="mt-12 text-xl text-red-400">{error}</p>
+      )}
+
+      {result && (
+        <div className="mt-12 w-full max-w-2xl bg-gray-800 rounded-2xl p-8 shadow-2xl border border-purple-500/30">
+          <h3 className="text-3xl font-bold mb-4 text-center text-purple-400">🔥 Hottest Right Now</h3>
+          <p className="text-2xl text-center break-words">{result}</p>
+        </div>
+      )}
     </main>
   );
 }
