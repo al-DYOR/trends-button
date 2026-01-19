@@ -6,7 +6,6 @@ export default function Home() {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // ИСПРАВЛЕНО: добавлен тип string для endpoint
   const fetchTrend = async (endpoint: string) => {
     setLoading(true);
     setResult('');
@@ -63,6 +62,7 @@ export default function Home() {
         maxWidth: '900px',
         width: '100%'
       }}>
+        {/* КНОПКА 1 */}
         <button 
           onClick={() => fetchTrend('trend-crypto')}
           disabled={loading}
@@ -75,12 +75,8 @@ export default function Home() {
             fontSize: '1.3rem',
             fontWeight: '600',
             cursor: loading ? 'not-allowed' : 'pointer',
-            boxShadow: '0 20px 40px rgba(147, 51, 234, 0.4)',
-            transition: 'all 0.3s ease',
-            textAlign: 'left'
+            boxShadow: '0 20px 40px rgba(147, 51, 234, 0.4)'
           }}
-          onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-4px)')}
-          onMouseLeave={(e) => !loading && (e.target.style.transform = '')}
         >
           <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
             🟠 What's popping on CT?
@@ -88,6 +84,7 @@ export default function Home() {
           <p style={{ margin: 0, opacity: 0.9 }}>Top narrative 24h</p>
         </button>
 
+        {/* КНОПКА 2 */}
         <button 
           onClick={() => fetchTrend('trend-farcaster')}
           disabled={loading}
@@ -99,13 +96,9 @@ export default function Home() {
             color: 'white',
             fontSize: '1.3rem',
             fontWeight: '600',
-            cursor: 'pointer',
-            boxShadow: '0 20px 40px rgba(59, 130, 246, 0.4)',
-            transition: 'all 0.3s ease',
-            textAlign: 'left'
+            cursor: loading ? 'not-allowed' : 'pointer',
+            boxShadow: '0 20px 40px rgba(59, 130, 246, 0.4)'
           }}
-          onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-4px)')}
-          onMouseLeave={(e) => !loading && (e.target.style.transform = '')}
         >
           <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
             🟦 Farcaster/Base alpha
@@ -113,6 +106,7 @@ export default function Home() {
           <p style={{ margin: 0, opacity: 0.9 }}>What's hot on Base 24h</p>
         </button>
 
+        {/* КНОПКА 3 */}
         <button 
           onClick={() => fetchTrend('token-solana')}
           disabled={loading}
@@ -124,13 +118,9 @@ export default function Home() {
             color: 'white',
             fontSize: '1.3rem',
             fontWeight: '600',
-            cursor: 'pointer',
-            boxShadow: '0 20px 40px rgba(16, 185, 129, 0.4)',
-            transition: 'all 0.3s ease',
-            textAlign: 'left'
+            cursor: loading ? 'not-allowed' : 'pointer',
+            boxShadow: '0 20px 40px rgba(16, 185, 129, 0.4)'
           }}
-          onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-4px)')}
-          onMouseLeave={(e) => !loading && (e.target.style.transform = '')}
         >
           <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
             🟩 Solana degen play
@@ -138,6 +128,7 @@ export default function Home() {
           <p style={{ margin: 0, opacity: 0.9 }}>2h mentions leader</p>
         </button>
 
+        {/* КНОПКА 4 */}
         <button 
           onClick={() => fetchTrend('token-base')}
           disabled={loading}
@@ -149,13 +140,9 @@ export default function Home() {
             color: 'white',
             fontSize: '1.3rem',
             fontWeight: '600',
-            cursor: 'pointer',
-            boxShadow: '0 20px 40px rgba(99, 102, 241, 0.4)',
-            transition: 'all 0.3s ease',
-            textAlign: 'left'
+            cursor: loading ? 'not-allowed' : 'pointer',
+            boxShadow: '0 20px 40px rgba(99, 102, 241, 0.4)'
           }}
-          onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-4px)')}
-          onMouseLeave={(e) => !loading && (e.target.style.transform = '')}
         >
           <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
             🟣 Base/ETH moonshot
