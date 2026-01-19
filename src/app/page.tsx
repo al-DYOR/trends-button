@@ -6,7 +6,8 @@ export default function Home() {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const fetchTrend = async (endpoint) => {
+  // ИСПРАВЛЕНО: добавлен тип string для endpoint
+  const fetchTrend = async (endpoint: string) => {
     setLoading(true);
     setResult('');
 
