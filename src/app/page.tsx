@@ -319,6 +319,7 @@ export default function Home() {
           }}
         >
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+            
             🟣 Base/ETH moonshot
           </h2>
           <p style={{ margin: 0, opacity: 0.9 }}>Fresh 2h pump</p>
@@ -340,4 +341,150 @@ export default function Home() {
       {data && (
         <div
           style={{
-            marginTop: '2rem
+            marginTop: '2rem',
+            width: '100%',
+            maxWidth: '640px',
+            backgroundColor: '#111827',
+            padding: '1.75rem',
+            borderRadius: '1.25rem',
+            border: '1px solid rgba(168,85,247,0.4)',
+          }}
+        >
+          <h3
+            style={{
+              fontSize: '1.75rem',
+              fontWeight: 800,
+              marginBottom: '1rem',
+              textAlign: 'center',
+              color: '#e9d5ff',
+            }}
+          >
+            Today's Trend
+          </h3>
+
+          <p
+            style={{
+              fontSize: '1.25rem',
+              textAlign: 'center',
+              wordBreak: 'break-word',
+            }}
+          >
+            {data.text}
+          </p>
+
+          {/* Action Buttons */}
+          <div
+            style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: '0.75rem',
+            }}
+          >
+            {data.link && (
+              <button
+                onClick={() => window.open(data.link!, '_blank')}
+                style={{
+                  padding: '0.6rem 1.4rem',
+                  borderRadius: '999px',
+                  border: '1px solid #3b82f6',
+                  backgroundColor: '#1d4ed8',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                }}
+              >
+                Open post
+              </button>
+            )}
+
+            {data.tokenAddress && (
+              <button
+                onClick={() => copyToClipboard(data.tokenAddress!)}
+                style={{
+                  padding: '0.6rem 1.4rem',
+                  borderRadius: '999px',
+                  border: '1px solid #10b981',
+                  backgroundColor: '#047857',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                }}
+              >
+                {copied ? 'Copied!' : 'Copy token address'}
+              </button>
+            )}
+
+            {data.tokenAddress && (
+              <button
+                onClick={() => {
+                  const url = getExplorerUrl(data.chain, data.tokenAddress!);
+                  if (url) window.open(url, '_blank');
+                }}
+                style={{
+                  padding: '0.6rem 1.4rem',
+                  borderRadius: '999px',
+                  border: '1px solid #fbbf24',
+                  backgroundColor: '#92400e',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                }}
+              >
+                View on Explorer
+              </button>
+            )}
+
+            <button
+              onClick={handleShareOnX}
+              style={{
+                padding: '0.6rem 1.4rem',
+                borderRadius: '999px',
+                border: '1px solid #e5e7eb',
+                backgroundColor: '#111827',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+              }}
+            >
+              Share on X
+            </button>
+
+            <button
+              onClick={handleShareOnFarcaster}
+              style={{
+                padding: '0.6rem 1.4rem',
+                borderRadius: '999px',
+                border: '1px solid #a855f7',
+                backgroundColor: '#6d28d9',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+              }}
+            >
+              Share on Base / FC
+            </button>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={handleCheckIn}
+        style={{
+          marginTop: '2.5rem',
+          padding: '0.75rem 1.75rem',
+          borderRadius: '999px',
+          border: '1px solid #f59e0b',
+          backgroundColor: '#d97706',
+          color: 'white',
+          cursor: 'pointer',
+          fontSize: '1rem',
+          fontWeight: 600,
+        }}
+      >
+        Daily check-in
+      </button>
+    </main>
+  );
+}
