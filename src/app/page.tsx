@@ -121,37 +121,37 @@ export default function Home() {
     }
   }, []);
 
-  // Build share text for degenerates
-  const buildShareText = (data: TrendData) => {
-    let body = data.text.length > 160 ? data.text.slice(0, 157) + '...' : data.text;
+  // Degen share texts v2 - готовые для X/FC
+const buildShareText = (data: TrendData) => {
+  let prefix = '';
+  
+  // Дегенские префиксы по source
+  if (data.source === 'x') {
+    prefix = '🔥 SPOTTED on X: ';
+  } else if (data.source === 'farcaster') {
+    prefix = '🐱‍💻 FC alpha: ';
+  } else if (data.source === 'token') {
+    prefix = data.chain === 'solana' 
+      ? '⚡ Solana degens pumping: '
+      : data.chain === 'base'
+      ? '🟣 Base moonshot alert: '
+      : '🚀 Onchain alpha: ';
+  }
 
-    if (data.source === 'x') {
-      body = `Heard on X:\n${body}`;
-    } else if (data.source === 'farcaster') {
-      body = `Heard on Farcaster:\n${body}`;
-    } else if (data.source === 'token') {
-      const chainText = data.chain === 'solana'
-        ? 'Degens on Solana are talking about:\n'
-        : data.chain === 'base'
-        ? 'Today on Base chain:\n'
-        : data.chain === 'arbitrum'
-        ? 'Arbitrum plays of the day:\n'
-        : data.chain === 'ethereum'
-        ? 'Ethereum whales are buzzing around:\n'
-        : 'What's hot onchain:\n';
-      body = chainText + body;
-    }
+  let body = data.text.length > 140 ? data.text.slice(0, 137) + '...' : data.text;
+  body = prefix + body;
 
-    if (data.tokenAddress) {
-      const short = data.tokenAddress.slice(0, 6) + '...' + data.tokenAddress.slice(-4);
-      body += `\nToken: ${short}`;
-    }
+  if (data.tokenAddress) {
+    const short = data.tokenAddress.slice(0, 6) + '...' + data.tokenAddress.slice(-4);
+    body += `\n\nToken: ${short}`;
+  }
 
-    const appUrl = 'https://trends-button.vercel.app/';
-    const appTag = `\n\nAlpha from an onchain app built on Base — just hit the button:\n${appUrl}`;
+  // Degen CTA + app link
+  const appUrl = 'https://trends-button.vercel.app/';
+  body += `\n\nFound this alpha via Trends Button → one-click degen trends on Base\n${appUrl}\n\nLFG 🚀`;
 
-    return body + appTag;
-  };
+  return body;
+};
 
   const handleShareOnX = () => {
     if (!data) return;
