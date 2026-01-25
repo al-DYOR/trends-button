@@ -1,5 +1,4 @@
-// Комментарий: Реальный роут для Base/ETH токенов (DexScreener + Basescan)
-
+// Реальный роут для Base/ETH токенов (DexScreener + Basescan)
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -16,17 +15,29 @@ export async function GET() {
     const data = await dexscreenerBase.json();
     const topPair = data.pairs?.[0];
     
-    const topToken = topPair 
-      ? `${topPair.baseToken.symbol} - Base trending ${topPair.priceChange.h1}%`
-      : 'BRETT - Base meme leader';
-
-    return NextResponse.json({ topToken });
+    if (topPair) {
+      const tokenAddress = topPair.baseToken.address;
+      const explorerLink = `https://basescan.org/token/${tokenAddress}`;
+      
+      return NextResponse.json({
+        topToken: `${topPair.baseToken.symbol} - Base trending ${Math.round(topPair.priceChange.h1)}% 🚀`,
+        tokenAddress,
+        link: explorerLink
+      });
+    }
+    
+    // Fallback
+    throw new Error('No trending pairs');
+    
   } catch (error) {
     console.error('Base token error:', error);
     
-    const fallbackTokens = ['$BRETT', '$DEGEN', '$TOSHI'];
-    const topToken = fallbackTokens[Math.floor(Math.random() * fallbackTokens.length)];
+    const fallback = {
+      topToken: 'BRETT - Base meme leader',
+      tokenAddress: '0x532f27101965dd16442E59d40670f757C0352c58', // BRETT
+      link: 'https://basescan.org/token/0x532f27101965dd16442E59d40670f757C0352c58'
+    };
 
-    return NextResponse.json({ topToken });
+    return NextResponse.json(fallback);
   }
 }
