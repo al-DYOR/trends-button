@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Сетка для кнопок: 1 колонка на мобиле, 2 на вебе */
+.trends-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+@media (min-width: 768px) {
+  .trends-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
