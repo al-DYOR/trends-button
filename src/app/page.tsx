@@ -2,10 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { useState, useEffect, useCallback } from 'react';
-import { ethers } from 'ethers';
 
-// 🔥 ФИКС TypeScript window.ethereum
+// 🔥 TypeScript фикс window.ethereum
 declare global {
   interface Window {
     ethereum?: any;
@@ -45,7 +43,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   
-  // Check-in states
+  // Check-in states (number вместо BigInt)
   const [userStats, setUserStats] = useState<UserStats>({ total: 0, daily: 0, remaining: 50, canCheckIn: true });
   const [checkInLoading, setCheckInLoading] = useState(false);
 
@@ -65,8 +63,8 @@ export default function Home() {
         text: result.topTrend || result.topToken || result.message || 'No data received',
         link: result.link || result.postUrl || undefined,
         tokenAddress: result.tokenAddress || result.address || undefined,
-        source: 'x',
-        chain: 'unknown',
+        source: 'x' as TrendSource,
+        chain: 'unknown' as Chain,
       };
 
       if (endpoint === 'trend-crypto') {
@@ -109,58 +107,62 @@ export default function Home() {
 
   // Check-in stats reader
   const updateUserStats = useCallback(async () => {
-    if (!window.ethereum) return;
+    if (typeof window === 'undefined' || !window.ethereum) return;
     
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CHECKIN_ABI, provider);
-      const signer = provider.getSigner();
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
       const address = await signer.getAddress();
       
-      const stats = await contract.getUserStats(address) as any;
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CHECKIN_ABI, provider);
+      const stats = await contract.getUserStats(address);
       
       setUserStats({
         total: Number(stats[0]),
-  daily: Number(stats[1]),
-  remaining: Number(stats[2]),
-  canCheckIn: stats[3]
+        daily: Number(stats[1]),
+        remaining: Number(stats[2]),
+        canCheckIn: stats[3]
       });
     } catch (error) {
       console.log('Stats read error:', error);
     }
   }, []);
 
-  // Degen share texts v2 - готовые для X/FC
-const buildShareText = (data: TrendData) => {
-  let prefix = '';
-  
-  // Дегенские префиксы по source
-  if (data.source === 'x') {
-    prefix = '🔥 SPOTTED on X: ';
-  } else if (data.source === 'farcaster') {
-    prefix = '🐱‍💻 FC alpha: ';
-  } else if (data.source === 'token') {
-    prefix = data.chain === 'solana' 
-      ? '⚡ Solana degens pumping: '
-      : data.chain === 'base'
-      ? '🟣 Base moonshot alert: '
-      : '🚀 Onchain alpha: ';
-  }
+  // Degen share texts v2 - FIXED для Turbopack
+  const buildShareText = (data: TrendData) => {
+    let prefix = '';
+    
+    if (data.source === 'x') {
+      prefix = '🔥 SPOTTED on X: ';
+    } else if (data.source === 'farcaster') {
+      prefix = '🐱‍💻 FC alpha: ';
+    } else if (data.source === 'token') {
+      if (data.chain === 'solana') {
+        prefix = '⚡ Solana degens pumping: ';
+      } else if (data.chain === 'base') {
+        prefix = '🟣 Base moonshot alert: ';
+      } else if (data.chain === 'arbitrum') {
+        prefix = '🔶 Arbitrum alpha: ';
+      } else if (data.chain === 'ethereum') {
+        prefix = '🐋 ETH whales buzzing: ';
+      } else {
+        prefix = '🚀 Onchain alpha: ';
+      }
+    }
 
-  let body = data.text.length > 140 ? data.text.slice(0, 137) + '...' : data.text;
-  body = prefix + body;
+    let body = data.text.length > 140 ? data.text.slice(0, 137) + '...' : data.text;
+    body = prefix + body;
 
-  if (data.tokenAddress) {
-    const short = data.tokenAddress.slice(0, 6) + '...' + data.tokenAddress.slice(-4);
-    body += `\n\nToken: ${short}`;
-  }
+    if (data.tokenAddress) {
+      const short = data.tokenAddress.slice(0, 6) + '...' + data.tokenAddress.slice(-4);
+      body += `\n\nToken: ${short}`;
+    }
 
-  // Degen CTA + app link
-  const appUrl = 'https://trends-button.vercel.app/';
-  body += `\n\nFound this alpha via Trends Button → one-click degen trends on Base\n${appUrl}\n\nLFG 🚀`;
+    const appUrl = 'https://trends-button.vercel.app/';
+    body += `\n\nFound this alpha via Trends Button → one-click degen trends on Base\n${appUrl}\n\nLFG 🚀`;
 
-  return body;
-};
+    return body;
+  };
 
   const handleShareOnX = () => {
     if (!data) return;
@@ -177,22 +179,22 @@ const buildShareText = (data: TrendData) => {
     window.open(url, '_blank');
   };
 
-  // Real check-in with contract
+  // Real check-in with contract (ethers v6)
   const handleCheckIn = async () => {
-    if (!window.ethereum || !userStats.canCheckIn) return;
+    if (typeof window === 'undefined' || !window.ethereum || !userStats.canCheckIn) return;
     
     setCheckInLoading(true);
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const provider = new ethers.BrowserProvider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
-      const signer = provider.getSigner();
+      const signer = await provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CHECKIN_ABI, signer);
       
       const tx = await contract.checkIn();
       await tx.wait();
       
       await updateUserStats();
-      alert(`✅ Check-in #${(userStats.total + 1).toString()} complete!`);
+      alert(`✅ Check-in #${userStats.total + 1} complete!`);
     } catch (error: any) {
       alert('Check-in failed: ' + (error.message || error.data?.message || 'Unknown error'));
     } finally {
@@ -338,165 +340,4 @@ const buildShareText = (data: TrendData) => {
       {data && (
         <div
           style={{
-            marginTop: '2rem',
-            width: '100%',
-            maxWidth: '640px',
-            backgroundColor: '#111827',
-            padding: '1.75rem',
-            borderRadius: '1.25rem',
-            border: '1px solid rgba(168,85,247,0.4)',
-          }}
-        >
-          <h3
-            style={{
-              fontSize: '1.75rem',
-              fontWeight: 800,
-              marginBottom: '1rem',
-              textAlign: 'center',
-              color: '#e9d5ff',
-            }}
-          >
-            Today's Trend
-          </h3>
-
-          <p
-            style={{
-              fontSize: '1.25rem',
-              textAlign: 'center',
-              wordBreak: 'break-word',
-            }}
-          >
-            {data.text}
-          </p>
-
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: '0.75rem',
-            }}
-          >
-            {data.link && (
-              <button
-                onClick={() => window.open(data.link!, '_blank')}
-                style={{
-                  padding: '0.6rem 1.4rem',
-                  borderRadius: '999px',
-                  border: '1px solid #3b82f6',
-                  backgroundColor: '#1d4ed8',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                }}
-              >
-                Open post
-              </button>
-            )}
-
-            {data.tokenAddress && (
-              <button
-                onClick={() => copyToClipboard(data.tokenAddress!)}
-                style={{
-                  padding: '0.6rem 1.4rem',
-                  borderRadius: '999px',
-                  border: '1px solid #10b981',
-                  backgroundColor: '#047857',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                }}
-              >
-                {copied ? 'Copied!' : 'Copy token address'}
-              </button>
-            )}
-
-            {data.tokenAddress && (
-              <button
-                onClick={() => {
-                  const url = getExplorerUrl(data.chain, data.tokenAddress!);
-                  if (url) window.open(url, '_blank');
-                }}
-                style={{
-                  padding: '0.6rem 1.4rem',
-                  borderRadius: '999px',
-                  border: '1px solid #fbbf24',
-                  backgroundColor: '#92400e',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                }}
-              >
-                View on Explorer
-              </button>
-            )}
-
-            <button
-              onClick={handleShareOnX}
-              style={{
-                padding: '0.6rem 1.4rem',
-                borderRadius: '999px',
-                border: '1px solid #e5e7eb',
-                backgroundColor: '#111827',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '0.95rem',
-              }}
-            >
-              Share on X
-            </button>
-
-            <button
-              onClick={handleShareOnFarcaster}
-              style={{
-                padding: '0.6rem 1.4rem',
-                borderRadius: '999px',
-                border: '1px solid #a855f7',
-                backgroundColor: '#6d28d9',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '0.95rem',
-              }}
-            >
-              Share on Base / FC
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Check-in Button с счетчиком */}
-      <button
-        onClick={handleCheckIn}
-        disabled={checkInLoading || !userStats.canCheckIn}
-        style={{
-          marginTop: '2.5rem',
-          padding: '0.75rem 1.75rem',
-          borderRadius: '999px',
-          border: `1px solid ${userStats.canCheckIn ? '#f59e0b' : '#6b7280'}`,
-          backgroundColor: checkInLoading ? '#4b5563' : 
-                         !userStats.canCheckIn ? '#1f2937' : '#d97706',
-          color: 'white',
-          cursor: checkInLoading ? 'wait' : userStats.canCheckIn ? 'pointer' : 'not-allowed',
-          fontSize: '1rem',
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-        }}
-      >
-        {checkInLoading ? 'Checking in...' : 'Daily check-in'}
-        <span style={{ fontSize: '0.9rem', opacity: 0.9 }}>
-          ({userStats.total} total | {userStats.remaining} left)
-        </span>
-      </button>
-
-      {/* Статус подключения */}
-      {!window.ethereum && (
-        <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#9ca3af' }}>
-          Connect MetaMask to see your check-in stats
-        </p>
-      )}
-    </main>
-  );
-}
+            marginTop: '2rem
