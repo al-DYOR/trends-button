@@ -1,20 +1,46 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { ethers } from 'ethers';
+
+type TrendSource = 'x' | 'farcaster' | 'token';
+type Chain = 'solana' | 'base' | 'arbitrum' | 'ethereum' | 'unknown';
 
 type TrendData = {
   text: string;
-  link?: string;         // ссылка на пост в X / Farcaster / Base
-  tokenAddress?: string; // адрес контракта токена
+  link?: string;
+  tokenAddress?: string;
+  source: TrendSource;
+  chain?: Chain;
 };
+
+type UserStats = {
+  total: bigint;
+  daily: bigint;
+  remaining: bigint;
+  canCheckIn: boolean;
+};
+
+// 🔥 ВСТАВЬ СВОЙ АДРЕС КОНТРАКТА СЮДА!
+const CONTRACT_ADDRESS = "0x49B0dC204158E75eDf68E9839b95BC32cAbE3cf6"; 
+
+const CHECKIN_ABI = [
+  "function checkIn()",
+  "function getUserStats(address) view returns (uint256 total, uint256 daily, uint256 remainingToday, bool canCheckIn)",
+  "event CheckIn(address indexed user, uint256 total, uint256 daily)"
+] as const;
 
 export default function Home() {
   const [data, setData] = useState<TrendData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  
+  // Check-in states
+  const [userStats, setUserStats] = useState<UserStats>({ total: 0n, daily: 0n, remaining: 50n, canCheckIn: true });
+  const [checkInLoading, setCheckInLoading] = useState(false);
 
-  // Комментарий: общий loader тренда
+  // Trend loader
   const fetchTrend = async (endpoint: string) => {
     setLoading(true);
     setError(null);
@@ -23,26 +49,30 @@ export default function Home() {
 
     try {
       const response = await fetch(`/api/${endpoint}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const result = await response.json();
 
-      const text =
-        result.topTrend ||
-        result.topToken ||
-        result.message ||
-        'No data received';
+      const baseData: TrendData = {
+        text: result.topTrend || result.topToken || result.message || 'No data received',
+        link: result.link || result.postUrl || undefined,
+        tokenAddress: result.tokenAddress || result.address || undefined,
+        source: 'x',
+        chain: 'unknown',
+      };
 
-      const link: string | undefined = result.link || result.postUrl || '';
-      const tokenAddress: string | undefined =
-        result.tokenAddress || result.address || '';
+      if (endpoint === 'trend-crypto') {
+        baseData.source = 'x';
+      } else if (endpoint === 'trend-farcaster') {
+        baseData.source = 'farcaster';
+      } else if (endpoint === 'token-solana') {
+        baseData.source = 'token';
+        baseData.chain = 'solana';
+      } else if (endpoint === 'token-base') {
+        baseData.source = 'token';
+        baseData.chain = 'base';
+      }
 
-      setData({
-        text,
-        link: link || undefined,
-        tokenAddress: tokenAddress || undefined,
-      });
+      setData(baseData);
     } catch (err: any) {
       setError(err.message || 'Failed to load trend. Try again later.');
     } finally {
@@ -60,26 +90,72 @@ export default function Home() {
     }
   };
 
-  // Комментарий: собираем текст для шаринга (короткий + адрес токена)
-  const buildShareText = () => {
-    if (!data) return '';
-    let base = data.text.length > 140 ? data.text.slice(0, 137) + '...' : data.text;
+  const getExplorerUrl = (chain: Chain | undefined, address: string) => {
+    if (chain === 'solana') return `https://solscan.io/token/${address}`;
+    if (chain === 'base') return `https://basescan.org/token/${address}`;
+    if (chain === 'arbitrum') return `https://arbiscan.io/token/${address}`;
+    if (chain === 'ethereum') return `https://etherscan.io/token/${address}`;
+    return '';
+  };
 
-    if (data.tokenAddress) {
-      const short =
-        data.tokenAddress.slice(0, 6) +
-        '...' +
-        data.tokenAddress.slice(-4);
-      base += `\nToken: ${short}`;
+  // Check-in stats reader
+  const updateUserStats = useCallback(async () => {
+    if (!window.ethereum) return;
+    
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CHECKIN_ABI, provider);
+      const signer = provider.getSigner();
+      const address = await signer.getAddress();
+      
+      const stats = await contract.getUserStats(address) as any;
+      
+      setUserStats({
+        total: BigInt(stats[0].toString()),
+        daily: BigInt(stats[1].toString()),
+        remaining: BigInt(stats[2].toString()),
+        canCheckIn: stats[3]
+      });
+    } catch (error) {
+      console.log('Stats read error:', error);
+    }
+  }, []);
+
+  // Build share text for degenerates
+  const buildShareText = (data: TrendData) => {
+    let body = data.text.length > 160 ? data.text.slice(0, 157) + '...' : data.text;
+
+    if (data.source === 'x') {
+      body = `Heard on X:\n${body}`;
+    } else if (data.source === 'farcaster') {
+      body = `Heard on Farcaster:\n${body}`;
+    } else if (data.source === 'token') {
+      const chainText = data.chain === 'solana'
+        ? 'Degens on Solana are talking about:\n'
+        : data.chain === 'base'
+        ? 'Today on Base chain:\n'
+        : data.chain === 'arbitrum'
+        ? 'Arbitrum plays of the day:\n'
+        : data.chain === 'ethereum'
+        ? 'Ethereum whales are buzzing around:\n'
+        : 'What's hot onchain:\n';
+      body = chainText + body;
     }
 
-    base += '\n\nvia Trends Button';
-    return base;
+    if (data.tokenAddress) {
+      const short = data.tokenAddress.slice(0, 6) + '...' + data.tokenAddress.slice(-4);
+      body += `\nToken: ${short}`;
+    }
+
+    const appUrl = 'https://trends-button.vercel.app/';
+    const appTag = `\n\nAlpha from an onchain app built on Base — just hit the button:\n${appUrl}`;
+
+    return body + appTag;
   };
 
   const handleShareOnX = () => {
     if (!data) return;
-    const text = encodeURIComponent(buildShareText());
+    const text = encodeURIComponent(buildShareText(data));
     const urlParam = data.link ? `&url=${encodeURIComponent(data.link)}` : '';
     const shareUrl = `https://twitter.com/intent/tweet?text=${text}${urlParam}`;
     window.open(shareUrl, '_blank');
@@ -87,17 +163,40 @@ export default function Home() {
 
   const handleShareOnFarcaster = () => {
     if (!data) return;
-
-    // Комментарий: простой вариант — открываем Warpcast compose с текстом
-    const text = encodeURIComponent(buildShareText());
+    const text = encodeURIComponent(buildShareText(data));
     const url = `https://warpcast.com/~/compose?text=${text}`;
     window.open(url, '_blank');
   };
 
+  // Real check-in with contract
   const handleCheckIn = async () => {
-    // Комментарий: заглушка для вызова контракта чек-ина
-    alert('Daily check-in: here we will call the smart contract.');
+    if (!window.ethereum || !userStats.canCheckIn) return;
+    
+    setCheckInLoading(true);
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CHECKIN_ABI, signer);
+      
+      const tx = await contract.checkIn();
+      await tx.wait();
+      
+      await updateUserStats();
+      alert(`✅ Check-in #${(userStats.total + 1n).toString()} complete!`);
+    } catch (error: any) {
+      alert('Check-in failed: ' + (error.message || error.data?.message || 'Unknown error'));
+    } finally {
+      setCheckInLoading(false);
+    }
   };
+
+  // Init stats on load
+  useEffect(() => {
+    updateUserStats();
+    const interval = setInterval(updateUserStats, 30000); // Update every 30s
+    return () => clearInterval(interval);
+  }, [updateUserStats]);
 
   return (
     <main
@@ -108,8 +207,7 @@ export default function Home() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem',
-        background:
-          'linear-gradient(135deg, #111827 0%, #1f2937 50%, #000000 100%)',
+        background: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #000000 100%)',
         color: 'white',
         fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
       }}
@@ -134,12 +232,11 @@ export default function Home() {
           opacity: 0.9,
         }}
       >
-        Discover daily crypto trends from Twitter and Farcaster
+        Find what crypto degens are talking about right now.
       </p>
 
-      {/* Сетка 2×2 на вебе, 1×4 на мобиле */}
+      {/* 2×2 button grid */}
       <div className="trends-grid">
-        {/* КНОПКА 1 */}
         <button
           onClick={() => fetchTrend('trend-crypto')}
           disabled={loading}
@@ -153,19 +250,12 @@ export default function Home() {
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          <h2
-            style={{
-              fontSize: '1.4rem',
-              fontWeight: 700,
-              marginBottom: '0.5rem',
-            }}
-          >
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             🟠 What's popping on CT?
           </h2>
           <p style={{ margin: 0, opacity: 0.9 }}>Top narrative 24h</p>
         </button>
 
-        {/* КНОПКА 2 */}
         <button
           onClick={() => fetchTrend('trend-farcaster')}
           disabled={loading}
@@ -179,19 +269,12 @@ export default function Home() {
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          <h2
-            style={{
-              fontSize: '1.4rem',
-              fontWeight: 700,
-              marginBottom: '0.5rem',
-            }}
-          >
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             🟦 Farcaster/Base alpha
           </h2>
           <p style={{ margin: 0, opacity: 0.9 }}>What's hot on Base 24h</p>
         </button>
 
-        {/* КНОПКА 3 */}
         <button
           onClick={() => fetchTrend('token-solana')}
           disabled={loading}
@@ -205,19 +288,12 @@ export default function Home() {
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          <h2
-            style={{
-              fontSize: '1.4rem',
-              fontWeight: 700,
-              marginBottom: '0.5rem',
-            }}
-          >
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             🟩 Solana degen play
           </h2>
           <p style={{ margin: 0, opacity: 0.9 }}>2h mentions leader</p>
         </button>
 
-        {/* КНОПКА 4 */}
         <button
           onClick={() => fetchTrend('token-base')}
           disabled={loading}
@@ -231,13 +307,7 @@ export default function Home() {
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          <h2
-            style={{
-              fontSize: '1.4rem',
-              fontWeight: 700,
-              marginBottom: '0.5rem',
-            }}
-          >
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             🟣 Base/ETH moonshot
           </h2>
           <p style={{ margin: 0, opacity: 0.9 }}>Fresh 2h pump</p>
@@ -245,25 +315,13 @@ export default function Home() {
       </div>
 
       {loading && (
-        <p
-          style={{
-            marginTop: '2rem',
-            fontSize: '1.25rem',
-            color: '#a855f7',
-          }}
-        >
+        <p style={{ marginTop: '2rem', fontSize: '1.25rem', color: '#a855f7' }}>
           Loading trend data...
         </p>
       )}
 
       {error && (
-        <p
-          style={{
-            marginTop: '2rem',
-            fontSize: '1.25rem',
-            color: '#f87171',
-          }}
-        >
+        <p style={{ marginTop: '2rem', fontSize: '1.25rem', color: '#f87171' }}>
           {error}
         </p>
       )}
@@ -277,7 +335,7 @@ export default function Home() {
             backgroundColor: '#111827',
             padding: '1.75rem',
             borderRadius: '1.25rem',
-            border: '1px solid rgba(168, 85, 247, 0.4)',
+            border: '1px solid rgba(168,85,247,0.4)',
           }}
         >
           <h3
@@ -302,7 +360,6 @@ export default function Home() {
             {data.text}
           </p>
 
-          {/* Кнопки действий */}
           <div
             style={{
               marginTop: '1.5rem',
@@ -312,7 +369,6 @@ export default function Home() {
               gap: '0.75rem',
             }}
           >
-            {/* открыть пост */}
             {data.link && (
               <button
                 onClick={() => window.open(data.link!, '_blank')}
@@ -330,7 +386,6 @@ export default function Home() {
               </button>
             )}
 
-            {/* копировать адрес токена */}
             {data.tokenAddress && (
               <button
                 onClick={() => copyToClipboard(data.tokenAddress!)}
@@ -348,7 +403,26 @@ export default function Home() {
               </button>
             )}
 
-            {/* share on X */}
+            {data.tokenAddress && (
+              <button
+                onClick={() => {
+                  const url = getExplorerUrl(data.chain, data.tokenAddress!);
+                  if (url) window.open(url, '_blank');
+                }}
+                style={{
+                  padding: '0.6rem 1.4rem',
+                  borderRadius: '999px',
+                  border: '1px solid #fbbf24',
+                  backgroundColor: '#92400e',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '0.95rem',
+                }}
+              >
+                View on Explorer
+              </button>
+            )}
+
             <button
               onClick={handleShareOnX}
               style={{
@@ -364,7 +438,6 @@ export default function Home() {
               Share on X
             </button>
 
-            {/* share on Base / Farcaster */}
             <button
               onClick={handleShareOnFarcaster}
               style={{
@@ -383,23 +456,38 @@ export default function Home() {
         </div>
       )}
 
-      {/* Daily check-in */}
+      {/* Check-in Button с счетчиком */}
       <button
         onClick={handleCheckIn}
+        disabled={checkInLoading || !userStats.canCheckIn}
         style={{
           marginTop: '2.5rem',
           padding: '0.75rem 1.75rem',
           borderRadius: '999px',
-          border: '1px solid #f59e0b',
-          backgroundColor: '#d97706',
+          border: `1px solid ${userStats.canCheckIn ? '#f59e0b' : '#6b7280'}`,
+          backgroundColor: checkInLoading ? '#4b5563' : 
+                         !userStats.canCheckIn ? '#1f2937' : '#d97706',
           color: 'white',
-          cursor: 'pointer',
+          cursor: checkInLoading ? 'wait' : userStats.canCheckIn ? 'pointer' : 'not-allowed',
           fontSize: '1rem',
           fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
         }}
       >
-        Daily check-in
+        {checkInLoading ? 'Checking in...' : 'Daily check-in'}
+        <span style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+          ({userStats.total.toString()} total | {userStats.remaining.toString()} left)
+        </span>
       </button>
+
+      {/* Статус подключения */}
+      {!window.ethereum && (
+        <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#9ca3af' }}>
+          Connect MetaMask to see your check-in stats
+        </p>
+      )}
     </main>
   );
 }
