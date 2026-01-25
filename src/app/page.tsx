@@ -15,9 +15,9 @@ type TrendData = {
 };
 
 type UserStats = {
-  total: bigint;
-  daily: bigint;
-  remaining: bigint;
+  total: number;
+  daily: number;
+  remaining: number;
   canCheckIn: boolean;
 };
 
@@ -111,10 +111,10 @@ export default function Home() {
       const stats = await contract.getUserStats(address) as any;
       
       setUserStats({
-        total: BigInt(stats[0].toString()),
-        daily: BigInt(stats[1].toString()),
-        remaining: BigInt(stats[2].toString()),
-        canCheckIn: stats[3]
+        total: Number(stats[0]),
+  daily: Number(stats[1]),
+  remaining: Number(stats[2]),
+  canCheckIn: stats[3]
       });
     } catch (error) {
       console.log('Stats read error:', error);
