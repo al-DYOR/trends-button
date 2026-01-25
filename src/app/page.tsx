@@ -2,149 +2,158 @@
 
 import { useState } from 'react';
 
+type TrendData = {
+  text: string;
+};
+
 export default function Home() {
-  const [result, setResult] = useState('');
+  const [data, setData] = useState<TrendData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTrend = async (endpoint: string) => {
     setLoading(true);
-    setResult('');
+    setError(null);
+    setData(null);
 
     try {
       const response = await fetch(`/api/${endpoint}`);
-      const data = await response.json();
-      setResult(data.topTrend || data.topToken || 'Data loaded!');
-    } catch (err) {
-      setResult('Error loading data');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+
+      const text =
+        result.topTrend ||
+        result.topToken ||
+        result.message ||
+        'No data received';
+
+      setData({ text });
+    } catch (err: any) {
+      setError(err.message || 'Failed to load trend. Try again later.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      padding: '2rem',
-      background: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #1e1b4b 100%)',
-      color: 'white',
-      fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'
-    }}>
-      <h1 style={{ 
-        fontSize: '3.5rem', 
-        fontWeight: 'bold', 
-        marginBottom: '2rem',
-        background: 'linear-gradient(45deg, #9333ea, #ec4899, #3b82f6)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        textAlign: 'center'
-      }}>
+    <main
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem',
+        background: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #000000 100%)',
+        color: 'white',
+        fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif',
+      }}
+    >
+      <h1
+        style={{
+          fontSize: '3rem',
+          fontWeight: 800,
+          marginBottom: '1.5rem',
+          textAlign: 'center',
+        }}
+      >
         Crypto Trends Today
       </h1>
-      
-      <p style={{ 
-        fontSize: '1.5rem', 
-        marginBottom: '3rem', 
-        textAlign: 'center',
-        maxWidth: '600px',
-        opacity: 0.9
-      }}>
+
+      <p
+        style={{
+          fontSize: '1.25rem',
+          marginBottom: '2.5rem',
+          textAlign: 'center',
+          maxWidth: '640px',
+          opacity: 0.9,
+        }}
+      >
         Discover daily crypto trends from Twitter and Farcaster
       </p>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
-        gap: '1.5rem', 
-        maxWidth: '900px',
-        width: '100%'
-      }}>
-        {/* КНОПКА 1 */}
-        <button 
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '1.5rem',
+          width: '100%',
+          maxWidth: '900px',
+        }}
+      >
+        <button
           onClick={() => fetchTrend('trend-crypto')}
           disabled={loading}
           style={{
-            padding: '2rem',
-            borderRadius: '16px',
+            padding: '1.5rem',
+            borderRadius: '1rem',
             border: '2px solid #9333ea',
-            background: loading ? '#4b5563' : '#9333ea',
+            backgroundColor: loading ? '#4b5563' : '#5b21b6',
             color: 'white',
-            fontSize: '1.3rem',
-            fontWeight: '600',
+            textAlign: 'left',
             cursor: loading ? 'not-allowed' : 'pointer',
-            boxShadow: '0 20px 40px rgba(147, 51, 234, 0.4)'
           }}
         >
-          <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             🟠 What's popping on CT?
           </h2>
           <p style={{ margin: 0, opacity: 0.9 }}>Top narrative 24h</p>
         </button>
 
-        {/* КНОПКА 2 */}
-        <button 
+        <button
           onClick={() => fetchTrend('trend-farcaster')}
           disabled={loading}
           style={{
-            padding: '2rem',
-            borderRadius: '16px',
+            padding: '1.5rem',
+            borderRadius: '1rem',
             border: '2px solid #3b82f6',
-            background: loading ? '#4b5563' : '#3b82f6',
+            backgroundColor: loading ? '#4b5563' : '#1d4ed8',
             color: 'white',
-            fontSize: '1.3rem',
-            fontWeight: '600',
+            textAlign: 'left',
             cursor: loading ? 'not-allowed' : 'pointer',
-            boxShadow: '0 20px 40px rgba(59, 130, 246, 0.4)'
           }}
         >
-          <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             🟦 Farcaster/Base alpha
           </h2>
           <p style={{ margin: 0, opacity: 0.9 }}>What's hot on Base 24h</p>
         </button>
 
-        {/* КНОПКА 3 */}
-        <button 
+        <button
           onClick={() => fetchTrend('token-solana')}
           disabled={loading}
           style={{
-            padding: '2rem',
-            borderRadius: '16px',
+            padding: '1.5rem',
+            borderRadius: '1rem',
             border: '2px solid #10b981',
-            background: loading ? '#4b5563' : '#10b981',
+            backgroundColor: loading ? '#4b5563' : '#047857',
             color: 'white',
-            fontSize: '1.3rem',
-            fontWeight: '600',
+            textAlign: 'left',
             cursor: loading ? 'not-allowed' : 'pointer',
-            boxShadow: '0 20px 40px rgba(16, 185, 129, 0.4)'
           }}
         >
-          <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             🟩 Solana degen play
           </h2>
           <p style={{ margin: 0, opacity: 0.9 }}>2h mentions leader</p>
         </button>
 
-        {/* КНОПКА 4 */}
-        <button 
+        <button
           onClick={() => fetchTrend('token-base')}
           disabled={loading}
           style={{
-            padding: '2rem',
-            borderRadius: '16px',
+            padding: '1.5rem',
+            borderRadius: '1rem',
             border: '2px solid #6366f1',
-            background: loading ? '#4b5563' : '#6366f1',
+            backgroundColor: loading ? '#4b5563' : '#4338ca',
             color: 'white',
-            fontSize: '1.3rem',
-            fontWeight: '600',
+            textAlign: 'left',
             cursor: loading ? 'not-allowed' : 'pointer',
-            boxShadow: '0 20px 40px rgba(99, 102, 241, 0.4)'
           }}
         >
-          <h2 style={{ marginBottom: '0.5rem', fontSize: '1.8rem' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             🟣 Base/ETH moonshot
           </h2>
           <p style={{ margin: 0, opacity: 0.9 }}>Fresh 2h pump</p>
@@ -152,61 +161,49 @@ export default function Home() {
       </div>
 
       {loading && (
-        <div style={{
-          marginTop: '3rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem'
-        }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            border: '3px solid rgba(147, 51, 234, 0.3)',
-            borderTop: '3px solid #9333ea',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }} />
-          <p style={{ fontSize: '1.5rem', color: '#9333ea' }}>Loading alpha...</p>
-        </div>
+        <p style={{ marginTop: '2rem', fontSize: '1.25rem', color: '#a855f7' }}>
+          Loading trend data...
+        </p>
       )}
 
-      {result && (
-        <div style={{
-          marginTop: '3rem',
-          padding: '2.5rem',
-          background: 'rgba(31, 41, 55, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: '24px',
-          border: '1px solid rgba(147, 51, 234, 0.3)',
-          maxWidth: '600px',
-          textAlign: 'center',
-          boxShadow: '0 25px 50px rgba(0,0,0,0.5)'
-        }}>
-          <h3 style={{ 
-            fontSize: '2.5rem', 
-            marginBottom: '1.5rem', 
-            background: 'linear-gradient(45deg, #9333ea, #ec4899)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
-            🔥 Hottest Right Now
+      {error && (
+        <p style={{ marginTop: '2rem', fontSize: '1.25rem', color: '#f87171' }}>{error}</p>
+      )}
+
+      {data && (
+        <div
+          style={{
+            marginTop: '2rem',
+            width: '100%',
+            maxWidth: '640px',
+            backgroundColor: '#111827',
+            padding: '1.75rem',
+            borderRadius: '1.25rem',
+            border: '1px solid rgba(168, 85, 247, 0.4)',
+          }}
+        >
+          <h3
+            style={{
+              fontSize: '1.75rem',
+              fontWeight: 800,
+              marginBottom: '1rem',
+              textAlign: 'center',
+              color: '#e9d5ff',
+            }}
+          >
+            Today's Trend
           </h3>
-          <p style={{ 
-            fontSize: '1.8rem', 
-            lineHeight: 1.5,
-            color: 'white'
-          }}>
-            {result}
+          <p
+            style={{
+              fontSize: '1.25rem',
+              textAlign: 'center',
+              wordBreak: 'break-word',
+            }}
+          >
+            {data.text}
           </p>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
+    </main>
   );
 }
