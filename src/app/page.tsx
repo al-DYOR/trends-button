@@ -4,8 +4,8 @@ import { useState } from 'react';
 
 type TrendData = {
   text: string;
-  link?: string;
-  tokenAddress?: string;
+  link?: string;         // ссылка на пост в X / Farcaster / Base
+  tokenAddress?: string; // адрес контракта токена
 };
 
 export default function Home() {
@@ -14,6 +14,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Комментарий: общий loader тренда
   const fetchTrend = async (endpoint: string) => {
     setLoading(true);
     setError(null);
@@ -27,7 +28,6 @@ export default function Home() {
       }
       const result = await response.json();
 
-      // Поддерживаем разные поля из API
       const text =
         result.topTrend ||
         result.topToken ||
@@ -60,16 +60,42 @@ export default function Home() {
     }
   };
 
+  // Комментарий: собираем текст для шаринга (короткий + адрес токена)
+  const buildShareText = () => {
+    if (!data) return '';
+    let base = data.text.length > 140 ? data.text.slice(0, 137) + '...' : data.text;
+
+    if (data.tokenAddress) {
+      const short =
+        data.tokenAddress.slice(0, 6) +
+        '...' +
+        data.tokenAddress.slice(-4);
+      base += `\nToken: ${short}`;
+    }
+
+    base += '\n\nvia Trends Button';
+    return base;
+  };
+
   const handleShareOnX = () => {
     if (!data) return;
-    const text = encodeURIComponent(data.text);
+    const text = encodeURIComponent(buildShareText());
     const urlParam = data.link ? `&url=${encodeURIComponent(data.link)}` : '';
     const shareUrl = `https://twitter.com/intent/tweet?text=${text}${urlParam}`;
     window.open(shareUrl, '_blank');
   };
 
+  const handleShareOnFarcaster = () => {
+    if (!data) return;
+
+    // Комментарий: простой вариант — открываем Warpcast compose с текстом
+    const text = encodeURIComponent(buildShareText());
+    const url = `https://warpcast.com/~/compose?text=${text}`;
+    window.open(url, '_blank');
+  };
+
   const handleCheckIn = async () => {
-    // Заглушка: здесь будет вызов контракта чек-ина
+    // Комментарий: заглушка для вызова контракта чек-ина
     alert('Daily check-in: here we will call the smart contract.');
   };
 
@@ -286,9 +312,10 @@ export default function Home() {
               gap: '0.75rem',
             }}
           >
+            {/* открыть пост */}
             {data.link && (
               <button
-                onClick={() => window.open(data.link, '_blank')}
+                onClick={() => window.open(data.link!, '_blank')}
                 style={{
                   padding: '0.6rem 1.4rem',
                   borderRadius: '999px',
@@ -303,6 +330,7 @@ export default function Home() {
               </button>
             )}
 
+            {/* копировать адрес токена */}
             {data.tokenAddress && (
               <button
                 onClick={() => copyToClipboard(data.tokenAddress!)}
@@ -320,7 +348,7 @@ export default function Home() {
               </button>
             )}
 
-            {/* Share on X */}
+            {/* share on X */}
             <button
               onClick={handleShareOnX}
               style={{
@@ -335,11 +363,27 @@ export default function Home() {
             >
               Share on X
             </button>
+
+            {/* share on Base / Farcaster */}
+            <button
+              onClick={handleShareOnFarcaster}
+              style={{
+                padding: '0.6rem 1.4rem',
+                borderRadius: '999px',
+                border: '1px solid #a855f7',
+                backgroundColor: '#6d28d9',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '0.95rem',
+              }}
+            >
+              Share on Base / FC
+            </button>
           </div>
         </div>
       )}
 
-      {/* Daily check-in кнопка */}
+      {/* Daily check-in */}
       <button
         onClick={handleCheckIn}
         style={{
