@@ -37,7 +37,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   
   // Check-in states
-  const [userStats, setUserStats] = useState<UserStats>({ total: 0n, daily: 0n, remaining: 50n, canCheckIn: true });
+  const [userStats, setUserStats] = useState<UserStats>({ total: 0, daily: 0, remaining: 50, canCheckIn: true });
   const [checkInLoading, setCheckInLoading] = useState(false);
 
   // Trend loader
@@ -183,7 +183,7 @@ const buildShareText = (data: TrendData) => {
       await tx.wait();
       
       await updateUserStats();
-      alert(`✅ Check-in #${(userStats.total + 1n).toString()} complete!`);
+      alert(`✅ Check-in #${(userStats.total + 1).toString()} complete!`);
     } catch (error: any) {
       alert('Check-in failed: ' + (error.message || error.data?.message || 'Unknown error'));
     } finally {
@@ -478,7 +478,7 @@ const buildShareText = (data: TrendData) => {
       >
         {checkInLoading ? 'Checking in...' : 'Daily check-in'}
         <span style={{ fontSize: '0.9rem', opacity: 0.9 }}>
-          ({userStats.total.toString()} total | {userStats.remaining.toString()} left)
+          ({userStats.total} total | {userStats.remaining} left)
         </span>
       </button>
 
