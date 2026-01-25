@@ -2,6 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
+import { useState, useEffect, useCallback } from 'react';
+import { ethers } from 'ethers';
+
+// 🔥 ФИКС TypeScript window.ethereum
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
 
 type TrendSource = 'x' | 'farcaster' | 'token';
 type Chain = 'solana' | 'base' | 'arbitrum' | 'ethereum' | 'unknown';
