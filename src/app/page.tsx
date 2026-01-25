@@ -29,7 +29,7 @@ type UserStats = {
 };
 
 // 🔥 ВСТАВЬ СВОЙ АДРЕС КОНТРАКТА СЮДА!
-const CONTRACT_ADDRESS = "0x49B0dC204158E75eDf68E9839b95BC32cAbE3cf6"; 
+const CONTRACT_ADDRESS = "0x854C703A8d10c3A24B9A86ACe6871A7EECc21092"; 
 
 const CHECKIN_ABI = [
   "function checkIn()",
