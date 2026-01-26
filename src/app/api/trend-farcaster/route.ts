@@ -1,40 +1,37 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const duneQueryId = '6597744'; // Твой рабочий query ✅
+  const duneQueryId = '6597744';
   
   try {
     const response = await fetch(
       `https://api.dune.com/api/v1/query/${duneQueryId}/results?limit=1`,
       {
         headers: {
-          'X-Dune-API-Key': process.env.DUNE_API_KEY!, // ← API КЛЮЧ!
+          'X-Dune-API-Key': process.env.DUNE_API_KEY!,
           'Accept': 'application/json'
         }
       }
     );
     
-    if (!response.ok) {
-      console.error('Dune status:', response.status);
-      throw new Error('Dune API failed');
+    if (response.ok) {
+      const data = await response.json();
+      const result = data.result.rows[0];
+      
+      // ✅ ССЫЛКА НА КАСТ!
+      const castUrl = `https://warpcast.com/~/cast/${result.castHash}`;
+      
+      return NextResponse.json({
+        topTrend: result.topTrend || 'Farcaster live 🚀',
+        link: castUrl,  // ← КЛИКАБЕЛЬНАЯ ССЫЛКА!
+        postUrl: castUrl
+      });
     }
-    
-    const data = await response.json();
-    const result = data.result.rows[0];
-    
-    // ТВОЙ ТЕКСТ КАСТА!
-    return NextResponse.json({
-      topTrend: result.topTrend || result.text || 'Farcaster live 🚀',
-      link: 'https://trends-button.vercel.app',
-      postUrl: 'https://trends-button.vercel.app'
-    });
-    
-  } catch (error) {
-    console.error('Dune error:', error);
-    return NextResponse.json({
-      topTrend: 'Farcaster: реальные обсуждения 🚀', // ← Пока без API key
-      link: 'https://trends-button.vercel.app',
-      postUrl: 'https://trends-button.vercel.app'
-    });
-  }
+  } catch {}
+
+  return NextResponse.json({
+    topTrend: 'Farcaster live trends 🚀',
+    link: 'https://warpcast.com',
+    postUrl: 'https://warpcast.com'
+  });
 }
