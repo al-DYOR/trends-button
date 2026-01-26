@@ -7,18 +7,18 @@ interface DexPair {
     address: string;
   };
   volume?: {
-    h1: number;
+    h1?: number;  // ← h1 тоже optional!
   };
   priceUSD?: number;
   priceChange?: {
-    h1: number;
+    h1?: number;
   };
-  pairAddress: string;
+  pairAddress?: string;
 }
 
 export async function GET() {
   try {
-    // 1. Dune Query 6596636 (ТОП ПРИОРИТЕТ)
+    // 1. Dune Query 6596636
     const duneResponse = await fetch(
       `https://api.dune.com/api/v1/query/6596636/results?limit=1`,
       { next: { revalidate: 300 } }
@@ -26,7 +26,7 @@ export async function GET() {
 
     if (duneResponse.ok) {
       const data = await duneResponse.json();
-      const result = data.result.rows[0];
+      const result = data.result?.rows?.[0];
       
       if (result?.topic) {
         return NextResponse.json({
@@ -40,18 +40,25 @@ export async function GET() {
     console.log('Dune → DexScreener');
   }
 
-  // 2. DexScreener Base (✅ типизировано!)
+  // 2. DexScreener Base (✅ 100% типобезопасно!)
   try {
     const dexscreener = await fetch('https://api.dexscreener.com/latest/dex/pairs/base');
     const data = await dexscreener.json();
     
     const topPair = data.pairs
-      ?.filter((p: DexPair) => p.volume?.h1 > 50000) // ✅ тип p: DexPair
-      .sort((a: DexPair, b: DexPair) => (b.volume?.h1 || 0) - (a.volume?.h1 || 0))[0];
+      ?.filter((p: DexPair) => {
+        const volumeH1 = p.volume?.h1;
+        return volumeH1 !== undefined && volumeH1 > 50000; // ✅ Безопасно!
+      })
+      .sort((a: DexPair, b: DexPair) => {
+        const aVol = a.volume?.h1 || 0;
+        const bVol = b.volume?.h1 || 0;
+        return bVol - aVol;
+      })[0];
 
-    if (topPair) {
+    if (topPair?.baseToken?.symbol) {
       return NextResponse.json({
-        topToken: `${topPair.baseToken.symbol} - Volume $${(topPair.volume?.h1 / 1000000).toFixed(1)}M 🚀`,
+        topToken: `${topPair.baseToken.symbol} - Volume $${((topPair.volume?.h1 || 0) / 1000000).toFixed(1)}M 🚀`,
         tokenAddress: topPair.baseToken.address,
         link: 'https://trends-button.vercel.app'
       });
@@ -60,7 +67,7 @@ export async function GET() {
     console.log('DexScreener → твои токены');
   }
 
-  // 3. ТВОИ токены (гарантия)
+  // 3. Твои токены (гарантия)
   const tokens = [
     { name: 'DEGEN', addr: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed' },
     { name: 'BRETT', addr: '0x532f27101965dd16442E59d40670FaF5eBB142E4' },
