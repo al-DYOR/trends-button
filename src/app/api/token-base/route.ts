@@ -2,38 +2,26 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Neynar Trending Casts (Farcaster реальные данные!)
-    const neynarResponse = await fetch(
-      'https://api.neynar.com/v2/farcaster/feeds/trending?limit=5',
-      {
-        headers: {
-          'api_key': 'nj-free-tier-token', // Бесплатно!
-          'Content-Type': 'application/json'
-        }
-      }
+    // CoinGecko Base Ecosystem — РЕАЛЬНЫЕ ДАННЫЕ!
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=base-ecosystem&order=volume_desc&per_page=1&page=1&sparkline=false'
     );
-
-    if (neynarResponse.ok) {
-      const data = await neynarResponse.json();
-      const topCast = data.result?.feeds?.[0]?.casts?.[0];
-      
-      if (topCast?.text) {
-        // Извлекаем токен из текста ($DEGEN, $BRETT)
-        const tokenMatch = topCast.text.match(/\$[A-Z]{3,6}/);
-        const token = tokenMatch ? tokenMatch[0] : '$DEGEN';
-        
-        return NextResponse.json({
-          topToken: `${token} - Farcaster trending cast 🚀`,
-          tokenAddress: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed', // DEGEN
-          link: 'https://trends-button.vercel.app'
-        });
-      }
+    
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      const topToken = data[0];
+      return NextResponse.json({
+        topToken: `${topCoin.symbol.toUpperCase()} - $${topCoin.current_price.toFixed(6)} (+${Math.round(topCoin.price_change_percentage_24h || 0)}%) 🚀`,
+        tokenAddress: topCoin.platforms?.base || topCoin.id,
+        link: 'https://trends-button.vercel.app'
+      });
     }
   } catch (error) {
-    console.log('Neynar error:', error);
+    console.log('CoinGecko error');
   }
 
-  // Твои токены (ротация)
+  // Твои токены как backup
   const tokens = [
     { name: 'DEGEN', addr: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed' },
     { name: 'BRETT', addr: '0x532f27101965dd16442E59d40670FaF5eBB142E4' },
@@ -41,7 +29,7 @@ export async function GET() {
   ];
 
   const token = tokens[Math.floor(Date.now() / 1200000) % 3];
-
+  
   return NextResponse.json({
     topToken: `${token.name} - Base trending live 🚀`,
     tokenAddress: token.addr,
