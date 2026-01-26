@@ -1,53 +1,46 @@
 import { NextResponse } from 'next/server';
 
-interface DexPair {
-  baseToken: {
-    symbol: string;
-    address: string;
-  };
-  volume?: {
-    h24?: number;
-    h1?: number;
-  };
-  priceUSD?: number;
-  priceChange?: {
-    h24?: number;
-  };
-  pairAddress?: string;
-}
-
 export async function GET() {
-  // DexScreener Base — БЕЗ ФИЛЬТРОВ (всегда данные!)
   try {
-    const dexscreener = await fetch('https://api.dexscreener.com/latest/dex/pairs/base');
-    const data = await dexscreener.json();
-    
-    if (data.pairs && data.pairs.length > 0) {
-      // ✅ ТИПЫ ВЕЗДЕ!
-      const topPair = data.pairs
-        .filter((p: DexPair) => p.baseToken && p.baseToken.symbol)  // ← тип p
-        .sort((a: DexPair, b: DexPair) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0))[0];  // ← типы a, b
+    // Neynar Trending Casts (Farcaster реальные данные!)
+    const neynarResponse = await fetch(
+      'https://api.neynar.com/v2/farcaster/feeds/trending?limit=5',
+      {
+        headers: {
+          'api_key': 'nj-free-tier-token', // Бесплатно!
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
-      if (topPair) {
+    if (neynarResponse.ok) {
+      const data = await neynarResponse.json();
+      const topCast = data.result?.feeds?.[0]?.casts?.[0];
+      
+      if (topCast?.text) {
+        // Извлекаем токен из текста ($DEGEN, $BRETT)
+        const tokenMatch = topCast.text.match(/\$[A-Z]{3,6}/);
+        const token = tokenMatch ? tokenMatch[0] : '$DEGEN';
+        
         return NextResponse.json({
-          topToken: `${topPair.baseToken.symbol} - $${topPair.priceUSD?.toFixed(6) || 'live'} (+${Math.round(topPair.priceChange?.h24 || 0)}%) 🚀`,
-          tokenAddress: topPair.baseToken.address,
+          topToken: `${token} - Farcaster trending cast 🚀`,
+          tokenAddress: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed', // DEGEN
           link: 'https://trends-button.vercel.app'
         });
       }
     }
-  } catch (e) {
-    console.log('DexScreener error:', e);
+  } catch (error) {
+    console.log('Neynar error:', error);
   }
 
-  // Твои токены (меняется каждые 30 минут)
+  // Твои токены (ротация)
   const tokens = [
     { name: 'DEGEN', addr: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed' },
     { name: 'BRETT', addr: '0x532f27101965dd16442E59d40670FaF5eBB142E4' },
     { name: 'TOSHI', addr: '0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4' }
   ];
 
-  const token = tokens[Math.floor(Date.now() / 1800000) % 3];
+  const token = tokens[Math.floor(Date.now() / 1200000) % 3];
 
   return NextResponse.json({
     topToken: `${token.name} - Base trending live 🚀`,
