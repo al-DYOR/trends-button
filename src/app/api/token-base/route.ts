@@ -1,14 +1,53 @@
 import { NextResponse } from 'next/server';
 
+// Тип для DexScreener пары
+interface DexPair {
+  baseToken: {
+    symbol: string;
+    address: string;
+  };
+  volume?: {
+    h1: number;
+  };
+  priceUSD?: number;
+  priceChange?: {
+    h1: number;
+  };
+  pairAddress: string;
+}
+
 export async function GET() {
-  // 1. DexScreener Base (100% работает)
+  try {
+    // 1. Dune Query 6596636 (ТОП ПРИОРИТЕТ)
+    const duneResponse = await fetch(
+      `https://api.dune.com/api/v1/query/6596636/results?limit=1`,
+      { next: { revalidate: 300 } }
+    );
+
+    if (duneResponse.ok) {
+      const data = await duneResponse.json();
+      const result = data.result.rows[0];
+      
+      if (result?.topic) {
+        return NextResponse.json({
+          topToken: `${result.topic} - ${result.mentions || 'live'} Farcaster mentions 🚀`,
+          tokenAddress: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed',
+          link: 'https://trends-button.vercel.app'
+        });
+      }
+    }
+  } catch {
+    console.log('Dune → DexScreener');
+  }
+
+  // 2. DexScreener Base (✅ типизировано!)
   try {
     const dexscreener = await fetch('https://api.dexscreener.com/latest/dex/pairs/base');
     const data = await dexscreener.json();
     
     const topPair = data.pairs
-      ?.filter(p => p.volume?.h1 > 50000) // Только живые пары
-      .sort((a, b) => (b.volume?.h1 || 0) - (a.volume?.h1 || 0))[0];
+      ?.filter((p: DexPair) => p.volume?.h1 > 50000) // ✅ тип p: DexPair
+      .sort((a: DexPair, b: DexPair) => (b.volume?.h1 || 0) - (a.volume?.h1 || 0))[0];
 
     if (topPair) {
       return NextResponse.json({
@@ -17,36 +56,22 @@ export async function GET() {
         link: 'https://trends-button.vercel.app'
       });
     }
-  } catch {}
+  } catch {
+    console.log('DexScreener → твои токены');
+  }
 
-  // 2. Neynar Trending (Farcaster БЕЗ Dune)
-  try {
-    const neynar = await fetch('https://api.neynar.com/v2/farcaster/trending?limit=1');
-    const data = await neynar.json();
-    
-    const topTrend = data.trending[0]?.tag || '$DEGEN';
-    return NextResponse.json({
-      topToken: `${topTrend} - Farcaster trending`,
-      tokenAddress: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed',
-      link: 'https://trends-button.vercel.app'
-    });
-  } catch {}
-
-
-  // 2. ТОКЕНЫ ( работают если DUNE или Neynar нет)
+  // 3. ТВОИ токены (гарантия)
   const tokens = [
     { name: 'DEGEN', addr: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed' },
     { name: 'BRETT', addr: '0x532f27101965dd16442E59d40670FaF5eBB142E4' },
     { name: 'TOSHI', addr: '0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4' }
   ];
 
-  // РАБОТАЕТ ГАРАНТИРОВАННО — меняется каждый час
-  const tokenIndex = Math.floor(Date.now() / 3600000) % tokens.length;
-  const selectedToken = tokens[tokenIndex];
+  const token = tokens[Math.floor(Date.now() / 3600000) % 3];
 
   return NextResponse.json({
-    topToken: `${selectedToken.name} - Base trending 🚀`,
-    tokenAddress: selectedToken.addr,
+    topToken: `${token.name} - Base trending 🚀`,
+    tokenAddress: token.addr,
     link: 'https://trends-button.vercel.app'
   });
 }
