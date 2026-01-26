@@ -1,5 +1,21 @@
 import { NextResponse } from 'next/server';
 
+interface DexPair {
+  baseToken: {
+    symbol: string;
+    address: string;
+  };
+  volume?: {
+    h24?: number;
+    h1?: number;
+  };
+  priceUSD?: number;
+  priceChange?: {
+    h24?: number;
+  };
+  pairAddress?: string;
+}
+
 export async function GET() {
   // DexScreener Base — БЕЗ ФИЛЬТРОВ (всегда данные!)
   try {
@@ -7,10 +23,10 @@ export async function GET() {
     const data = await dexscreener.json();
     
     if (data.pairs && data.pairs.length > 0) {
-      // ТОП-1 по объему h24 (надежнее h1)
+      // ✅ ТИПЫ ВЕЗДЕ!
       const topPair = data.pairs
-        .filter(p => p.baseToken && p.baseToken.symbol)
-        .sort((a, b) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0))[0];
+        .filter((p: DexPair) => p.baseToken && p.baseToken.symbol)  // ← тип p
+        .sort((a: DexPair, b: DexPair) => (b.volume?.h24 || 0) - (a.volume?.h24 || 0))[0];  // ← типы a, b
 
       if (topPair) {
         return NextResponse.json({
@@ -31,7 +47,7 @@ export async function GET() {
     { name: 'TOSHI', addr: '0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4' }
   ];
 
-  const token = tokens[Math.floor(Date.now() / 1800000) % 3]; // 30 мин
+  const token = tokens[Math.floor(Date.now() / 1800000) % 3];
 
   return NextResponse.json({
     topToken: `${token.name} - Base trending live 🚀`,
