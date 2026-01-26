@@ -382,22 +382,7 @@ export default function Home() {
               gap: '0.75rem',
             }}
           >
-            {data.link && (
-              <button
-                onClick={() => window.open(data.link!, '_blank')}
-                style={{
-                  padding: '0.6rem 1.4rem',
-                  borderRadius: '999px',
-                  border: '1px solid #3b82f6',
-                  backgroundColor: '#1d4ed8',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                }}
-              >
-                Open post
-              </button>
-            )}
+            {/* Кнопка Open post УДАЛЕНА */}
 
             {data.tokenAddress && (
               <button
