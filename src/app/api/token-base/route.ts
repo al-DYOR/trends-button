@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // CoinGecko Base Ecosystem — РЕАЛЬНЫЕ ДАННЫЕ!
     const response = await fetch(
       'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=base-ecosystem&order=volume_desc&per_page=1&page=1&sparkline=false'
     );
@@ -10,10 +9,10 @@ export async function GET() {
     const data = await response.json();
     
     if (data && data.length > 0) {
-      const topToken = data[0];
+      const topTokenData = data[0]; // ✅ Правильное имя переменной
       return NextResponse.json({
-        topToken: `${topCoin.symbol.toUpperCase()} - $${topCoin.current_price.toFixed(6)} (+${Math.round(topCoin.price_change_percentage_24h || 0)}%) 🚀`,
-        tokenAddress: topCoin.platforms?.base || topCoin.id,
+        topToken: `${topTokenData.symbol.toUpperCase()} - $${topTokenData.current_price.toFixed(6)} (+${Math.round(topTokenData.price_change_percentage_24h || 0)}%) 🚀`,
+        tokenAddress: topTokenData.platforms?.base || topTokenData.id,
         link: 'https://trends-button.vercel.app'
       });
     }
@@ -21,7 +20,6 @@ export async function GET() {
     console.log('CoinGecko error');
   }
 
-  // Твои токены как backup
   const tokens = [
     { name: 'DEGEN', addr: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed' },
     { name: 'BRETT', addr: '0x532f27101965dd16442E59d40670FaF5eBB142E4' },
