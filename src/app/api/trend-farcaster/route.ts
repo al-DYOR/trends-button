@@ -1,42 +1,25 @@
-// Комментарий: Реальный роут для Farcaster/Base трендов (парсим Warpcast + Base активности)
-
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Комментарий: Farcaster trends через публичный searchcaster
-    const farcasterResponse = await fetch(
-      'https://api.searchcaster.xyz/search?q=base+degen&limit=10',
-      { next: { revalidate: 600 } }
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=farcaster&order=volume_desc&per_page=1&page=1'
     );
-
-    // Комментарий: Base chain activity через Dune Analytics публичный запрос
-    const baseActivity = await fetch(
-      'https://api.dune.com/api/v1/query/1234567/execute', // публичный дашборд Base
-      { next: { revalidate: 600 } }
-    );
-
-    if (!farcasterResponse.ok) {
-      throw new Error('Farcaster API unavailable');
-    }
-
-    const farcasterData = await farcasterResponse.json();
-    const topPost = farcasterData.posts?.[0]?.text.slice(0, 100) || 'DEGEN season';
-
-    const topTrend = `Farcaster: "${topPost}..." - Base TVL growing`;
-
-    return NextResponse.json({ topTrend });
-  } catch (error) {
-    console.error('Farcaster trend error:', error);
+    const data = await response.json();
     
-    // Fallback для Farcaster/Base
-    const fallbackTrends = [
-      'DEGEN chain exploding on Base',
-      'Farcaster Frames going viral', 
-      'Clanker memes dominating feed'
-    ];
-    const topTrend = fallbackTrends[Math.floor(Math.random() * fallbackTrends.length)];
+    if (data && data.length > 0) {
+      const topTrend = data[0];
+      return NextResponse.json({
+        topTrend: `${topTrend.symbol.toUpperCase()} - Farcaster trending 🚀`,
+        link: 'https://trends-button.vercel.app',
+        postUrl: 'https://trends-button.vercel.app'
+      });
+    }
+  } catch {}
 
-    return NextResponse.json({ topTrend });
-  }
+  return NextResponse.json({
+    topTrend: 'Farcaster Frames meta 🚀',
+    link: 'https://trends-button.vercel.app',
+    postUrl: 'https://trends-button.vercel.app'
+  });
 }
